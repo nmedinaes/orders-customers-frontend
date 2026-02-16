@@ -15,14 +15,14 @@ npm install
 
 ## Configuración
 
-Copia el archivo `.env.local.example` a `.env.local` y ajusta las URLs si es necesario:
+Copiar el archivo `.env.local.example` a `.env.local` y ajustar las URLs si es necesario:
 
 ```
 NEXT_PUBLIC_ORDER_SERVICE_URL=http://localhost:3002
 NEXT_PUBLIC_CUSTOMER_SERVICE_URL=http://localhost:3001
 ```
 
-Por defecto apunta a localhost. Si los servicios backend corren en otra máquina o puerto, modifica estas variables.
+Por defecto apunta a localhost. Si los servicios backend corren en otra máquina o puerto, modificar estas variables.
 
 ## Ejecutar en desarrollo
 
@@ -30,7 +30,7 @@ Por defecto apunta a localhost. Si los servicios backend corren en otra máquina
 npm run dev
 ```
 
-Abre el navegador en [http://localhost:3000](http://localhost:3000)
+Abrir el navegador en [http://localhost:3000](http://localhost:3000)
 
 ## Compilar para producción
 
