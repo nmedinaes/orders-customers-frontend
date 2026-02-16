@@ -10,7 +10,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Orders & Customers",
+  title: "Pedidos & Clientes",
   description: "Gestión de Pedidos &amp; Clientes",
 };
 

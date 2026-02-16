@@ -1,6 +1,6 @@
-# Orders & Customers - Frontend
+# Pedidos & Clientes - Frontend
 
-Aplicación web desarrollada con Next.js que consume la API de Orders & Customers. Permite visualizar el listado de pedidos de un cliente (con paginación) y crear nuevos pedidos.
+Aplicación web desarrollada con Next.js que consume la API de Pedidos & Clientes. Permite visualizar el listado de pedidos de un cliente (con paginación) y crear nuevos pedidos.
 
 ## Requisitos
 
