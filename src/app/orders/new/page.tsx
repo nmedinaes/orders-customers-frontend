@@ -1,67 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHouse, faList, faPlus, faUser, faBox, faHashtag, faDollarSign, faListCheck, faCircleExclamation, faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { createOrder, fetchCustomers } from "@/lib/api";
+import {
+  faPlus,
+  faUser,
+  faBox,
+  faHashtag,
+  faDollarSign,
+  faListCheck,
+  faCheck,
+  faXmark,
+  faSpinner,
+} from "@fortawesome/free-solid-svg-icons";
+import { createOrder } from "@/lib/api";
 import { STATUS_OPTIONS, getStatusLabel } from "@/lib/constants";
-import type { Customer } from "@/types/customer";
+import { useCustomers } from "@/hooks/useCustomers";
+import { usePriceFormat, MAX_PRICE } from "@/hooks/usePriceFormat";
+import { Navbar, AppCard, AlertError } from "@/components";
+
+const MAX_PRODUCT_LENGTH = 200;
+const MAX_QUANTITY = 999999;
 
 export default function NewOrderPage() {
   const router = useRouter();
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const { customers, error: customersError } = useCustomers();
+  const {
+    priceDisplay,
+    formatPrice,
+    parsePrice,
+    handlePriceChange,
+    handlePriceBlur,
+  } = usePriceFormat(MAX_PRICE);
+
   const [customerId, setCustomerId] = useState("");
   const [productName, setProductName] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [priceDisplay, setPriceDisplay] = useState("");
   const [status, setStatus] = useState("pending");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const MAX_PRODUCT_LENGTH = 200;
-  const MAX_QUANTITY = 999999;
-  const MAX_PRICE = 999999999.99;
-
-  function formatPrice(value: number): string {
-    if (Number.isNaN(value) || value < 0) return "";
-    if (value === 0) return "";
-    const clamped = Math.min(value, MAX_PRICE);
-    return clamped.toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-  }
-
-  function parsePrice(str: string): number {
-    const cleaned = str.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-    const n = parseFloat(cleaned);
-    return Number.isNaN(n) ? 0 : Math.min(Math.max(n, 0), MAX_PRICE);
-  }
-
-  function handlePriceChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value.replace(/[^\d,]/g, "").replace(/,/g, (m, i, s) => s.indexOf(",") === i ? m : "");
-    const commaIndex = raw.indexOf(",");
-    const hasComma = commaIndex >= 0;
-    const intPart = hasComma ? raw.slice(0, commaIndex) : raw;
-    const decPart = hasComma ? raw.slice(commaIndex + 1).slice(0, 2) : "";
-    const combined = decPart ? `${intPart}.${decPart}` : intPart || "0";
-    const num = parseFloat(combined);
-    if (Number.isNaN(num)) {
-      setPriceDisplay("");
-      return;
-    }
-    const clamped = Math.min(Math.max(num, 0), MAX_PRICE);
-    const intVal = Math.floor(clamped);
-    const base = (intVal > 0 || hasComma) ? intVal.toLocaleString("es-CO") : "";
-    const display = base + (hasComma ? "," + decPart : "");
-    setPriceDisplay(display);
-  }
-
-  useEffect(() => {
-    fetchCustomers()
-      .then(setCustomers)
-      .catch((e) => setError(e.message));
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,7 +53,9 @@ export default function NewOrderPage() {
       return;
     }
     if (q < 1 || q > MAX_QUANTITY) {
-      setError(`La cantidad debe estar entre 1 y ${MAX_QUANTITY.toLocaleString("es-CO")}.`);
+      setError(
+        `La cantidad debe estar entre 1 y ${MAX_QUANTITY.toLocaleString("es-CO")}.`
+      );
       return;
     }
     if (p <= 0 && priceDisplay.trim() !== "") {
@@ -105,7 +87,8 @@ export default function NewOrderPage() {
       });
       router.push("/orders");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Error al crear el pedido";
+      const message =
+        err instanceof Error ? err.message : "Error al crear el pedido";
       setError(message);
       await Swal.fire({
         icon: "error",
@@ -118,20 +101,11 @@ export default function NewOrderPage() {
     }
   }
 
+  const displayError = customersError ?? error;
+
   return (
     <div className="min-vh-100">
-      <nav className="navbar navbar-expand-lg navbar-app">
-        <div className="container">
-          <Link href="/" className="navbar-brand">
-            Pedidos &amp; Clientes
-          </Link>
-          <div className="navbar-nav ms-auto gap-1">
-            <Link href="/" className="nav-link me-2"><FontAwesomeIcon icon={faHouse} className="me-1" /> Inicio</Link>
-            <Link href="/orders" className="nav-link me-2"><FontAwesomeIcon icon={faList} className="me-1" /> Pedidos</Link>
-            <Link href="/orders/new" className="nav-link active"><FontAwesomeIcon icon={faPlus} className="me-1" /> Crear pedido</Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar active="new" />
 
       <main className="container page-main">
         <nav aria-label="breadcrumb" className="mb-4">
@@ -146,16 +120,13 @@ export default function NewOrderPage() {
           </ol>
         </nav>
 
-        <h1 className="page-title"><FontAwesomeIcon icon={faPlus} className="me-2" /> Crear pedido</h1>
+        <h1 className="page-title">
+          <FontAwesomeIcon icon={faPlus} className="me-2" /> Crear pedido
+        </h1>
 
-        {error && (
-          <div className="alert alert-danger d-flex align-items-center rounded-3 mb-4" role="alert">
-            <FontAwesomeIcon icon={faCircleExclamation} className="me-2" />
-            {error}
-          </div>
-        )}
+        {displayError && <AlertError message={displayError} className="mb-4" />}
 
-        <div className="card card-app mx-auto" style={{ maxWidth: "28rem" }}>
+        <AppCard className="mx-auto" style={{ maxWidth: "28rem" }}>
           <div className="card-body p-4">
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -192,7 +163,9 @@ export default function NewOrderPage() {
                   className="form-control form-control-app"
                   placeholder="Nombre del producto"
                 />
-                <small className="text-muted d-block mt-1">{productName.length}/{MAX_PRODUCT_LENGTH}</small>
+                <small className="text-muted d-block mt-1">
+                  {productName.length}/{MAX_PRODUCT_LENGTH}
+                </small>
               </div>
 
               <div className="row g-3 mb-4">
@@ -216,7 +189,9 @@ export default function NewOrderPage() {
                     <FontAwesomeIcon icon={faDollarSign} className="me-1" /> Precio
                   </label>
                   <div className="input-group rounded-3">
-                    <span className="input-group-text bg-light border-end-0"><FontAwesomeIcon icon={faDollarSign} className="opacity-75" /></span>
+                    <span className="input-group-text bg-light border-end-0">
+                      <FontAwesomeIcon icon={faDollarSign} className="opacity-75" />
+                    </span>
                     <input
                       id="price"
                       type="text"
@@ -224,7 +199,7 @@ export default function NewOrderPage() {
                       autoComplete="off"
                       value={priceDisplay}
                       onChange={handlePriceChange}
-                      onBlur={() => setPriceDisplay(formatPrice(parsePrice(priceDisplay)))}
+                      onBlur={handlePriceBlur}
                       className="form-control form-control-app border-start-0"
                       placeholder="0,00"
                     />
@@ -256,18 +231,20 @@ export default function NewOrderPage() {
                   disabled={loading}
                   className="btn btn-app btn-app-primary flex-grow-1"
                 >
-                  <FontAwesomeIcon icon={faCheck} className="me-1" /> {loading ? "Creando..." : "Crear pedido"}
+                  {loading ? (
+                    <FontAwesomeIcon icon={faSpinner} spin className="me-1" />
+                  ) : (
+                    <FontAwesomeIcon icon={faCheck} className="me-1" />
+                  )}{" "}
+                  {loading ? "Creando..." : "Crear pedido"}
                 </button>
-                <Link
-                  href="/orders"
-                  className="btn btn-app btn-app-ghost"
-                >
+                <Link href="/orders" className="btn btn-app btn-app-ghost">
                   <FontAwesomeIcon icon={faXmark} className="me-1" /> Cancelar
                 </Link>
               </div>
             </form>
           </div>
-        </div>
+        </AppCard>
       </main>
     </div>
   );
