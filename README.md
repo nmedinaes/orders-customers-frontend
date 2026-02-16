@@ -2,6 +2,10 @@
 
 Aplicación web desarrollada con Next.js que consume la API de Pedidos & Clientes. Permite visualizar el listado de pedidos de un cliente (con paginación) y crear nuevos pedidos.
 
+<img width="1907" height="945" alt="image" src="https://github.com/user-attachments/assets/187c2eed-ada6-42bd-bac1-0e93915ba6a5" />
+<img width="1907" height="946" alt="image" src="https://github.com/user-attachments/assets/cfab3c14-662c-4896-b8c6-2f536f2092b1" />
+<img width="1900" height="946" alt="image" src="https://github.com/user-attachments/assets/0b84df11-5aae-4098-9783-e376f50f5d8c" />
+
 ## Requisitos
 
 - Node.js 18 o superior
