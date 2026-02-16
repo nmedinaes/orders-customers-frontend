@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { fetchOrders } from "@/lib/api";
-import { fetchCustomers } from "@/lib/api";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHouse, faList, faPlus, faUser, faCircleExclamation, faSpinner, faChevronLeft, faChevronRight, faClipboardList } from "@fortawesome/free-solid-svg-icons";
+import { fetchOrders, fetchCustomers } from "@/lib/api";
+import { getStatusLabel } from "@/lib/constants";
 import type { Order } from "@/types/order";
 import type { Customer } from "@/types/customer";
 
@@ -11,9 +13,7 @@ const PER_PAGE = 20;
 
 export default function OrdersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(
-    null
-  );
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -48,148 +48,141 @@ export default function OrdersPage() {
   const hasNext = page < totalPages;
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-6">
-      <div className="mx-auto max-w-4xl">
-        <nav className="mb-6 flex items-center gap-4">
-          <Link
-            href="/"
-            className="text-zinc-600 hover:text-zinc-900 underline"
-          >
-            Inicio
+    <div className="min-vh-100">
+      <nav className="navbar navbar-expand-lg navbar-app">
+        <div className="container">
+          <Link href="/" className="navbar-brand">
+            Pedidos &amp; Clientes
           </Link>
-          <span className="text-zinc-400">/</span>
-          <span className="font-medium">Listado de pedidos</span>
-        </nav>
-
-        <div className="mb-6 flex flex-wrap items-center gap-4">
-          <h1 className="text-2xl font-semibold text-zinc-900">
-            Listado de pedidos
-          </h1>
-          <Link
-            href="/orders/new"
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-          >
-            Crear pedido
-          </Link>
+          <div className="navbar-nav ms-auto align-items-center gap-1">
+            <Link href="/" className="nav-link me-2"><FontAwesomeIcon icon={faHouse} className="me-1" /> Inicio</Link>
+            <Link href="/orders" className="nav-link active me-2"><FontAwesomeIcon icon={faList} className="me-1" /> Pedidos</Link>
+            <Link href="/orders/new" className="nav-link btn btn-light btn-sm" style={{ color: "var(--app-primary)" }}>
+              <FontAwesomeIcon icon={faPlus} className="me-1" /> Crear pedido
+            </Link>
+          </div>
         </div>
+      </nav>
 
-        <div className="mb-4">
-          <label
-            htmlFor="customer"
-            className="mb-1 block text-sm font-medium text-zinc-700"
-          >
-            Cliente
-          </label>
-          <select
-            id="customer"
-            value={selectedCustomerId ?? ""}
-            onChange={(e) => {
-              setSelectedCustomerId(
-                e.target.value ? Number(e.target.value) : null
-              );
-              setPage(1);
-            }}
-            className="w-full max-w-xs rounded-md border border-zinc-300 px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-          >
-            <option value="">Selecciona un cliente</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.customer_name} (ID: {c.id})
-              </option>
-            ))}
-          </select>
+      <main className="container page-main">
+        <h1 className="page-title"><FontAwesomeIcon icon={faClipboardList} className="me-2" /> Listado de pedidos</h1>
+
+        <div className="card card-app mb-4">
+          <div className="card-body">
+            <label htmlFor="customer" className="form-label form-label-app">
+              <FontAwesomeIcon icon={faUser} className="me-1" /> Cliente
+            </label>
+            <select
+              id="customer"
+              value={selectedCustomerId ?? ""}
+              onChange={(e) => {
+                setSelectedCustomerId(e.target.value ? Number(e.target.value) : null);
+                setPage(1);
+              }}
+              className="form-select form-select-app w-100"
+              style={{ maxWidth: "320px" }}
+            >
+              <option value="">Selecciona un cliente</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.customer_name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <div className="alert alert-danger d-flex align-items-center rounded-3" role="alert">
+            <FontAwesomeIcon icon={faCircleExclamation} className="me-2" />
             {error}
           </div>
         )}
 
         {loading ? (
-          <p className="text-zinc-600">Cargando...</p>
+          <div className="card card-app">
+            <div className="card-body text-center py-5">
+              <FontAwesomeIcon icon={faSpinner} spin className="fs-1" style={{ color: "var(--app-primary)" }} />
+              <p className="text-muted mt-3 mb-0">Cargando pedidos...</p>
+            </div>
+          </div>
         ) : !selectedCustomerId ? (
-          <p className="text-zinc-600">
-            Selecciona un cliente para ver sus pedidos.
-          </p>
+          <div className="card card-app">
+            <div className="empty-state">
+              Selecciona un cliente para ver sus pedidos.
+            </div>
+          </div>
         ) : orders.length === 0 ? (
-          <p className="text-zinc-600">No hay pedidos para este cliente.</p>
+          <div className="card card-app">
+            <div className="empty-state">
+              No hay pedidos para este cliente.
+            </div>
+          </div>
         ) : (
           <>
-            <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow">
-              <table className="min-w-full divide-y divide-zinc-200">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                      ID
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                      Producto
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                      Cantidad
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                      Precio
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                      Estado
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200">
-                  {orders.map((o) => (
-                    <tr key={o.id}>
-                      <td className="whitespace-nowrap px-4 py-3 text-zinc-900">
-                        {o.id}
-                      </td>
-                      <td className="px-4 py-3 text-zinc-900">
-                        {o.product_name}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-zinc-900">
-                        {o.quantity}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-zinc-900">
-                        {o.price}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700">
-                          {o.status}
-                        </span>
-                      </td>
+            <div className="card card-app overflow-hidden">
+              <div className="table-responsive">
+                <table className="table table-app align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Producto</th>
+                      <th>Cantidad</th>
+                      <th>Precio</th>
+                      <th>Estado</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {orders.map((o) => (
+                      <tr key={o.id}>
+                        <td className="fw-medium">{o.id}</td>
+                        <td>{o.product_name}</td>
+                        <td>{o.quantity}</td>
+                        <td>
+                          {typeof o.price === "string"
+                            ? Number(o.price).toLocaleString("es-CO", { style: "currency", currency: "COP" })
+                            : o.price}
+                        </td>
+                        <td>
+                          <span className={`badge rounded-pill px-2 py-1 badge-status-${o.status}`}>
+                            {getStatusLabel(o.status)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-zinc-600">
-                  Mostrando {(page - 1) * PER_PAGE + 1} -{" "}
-                  {Math.min(page * PER_PAGE, total)} de {total} resultados
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4">
+                <p className="text-muted small mb-0">
+                  Mostrando {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, total)} de {total} resultados
                 </p>
-                <div className="flex gap-2">
+                <div className="btn-group pagination-app">
                   <button
+                    type="button"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={!hasPrev}
-                    className="rounded-md border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
+                    className="btn btn-app btn-app-ghost btn-sm"
                   >
-                    Anterior
+                    <FontAwesomeIcon icon={faChevronLeft} className="me-1" /> Anterior
                   </button>
                   <button
+                    type="button"
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={!hasNext}
-                    className="rounded-md border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
+                    className="btn btn-app btn-app-ghost btn-sm"
                   >
-                    Siguiente
+                    Siguiente <FontAwesomeIcon icon={faChevronRight} className="ms-1" />
                   </button>
                 </div>
               </div>
             )}
           </>
         )}
-      </div>
+      </main>
     </div>
   );
 }

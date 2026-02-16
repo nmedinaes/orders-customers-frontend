@@ -1,24 +1,33 @@
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faList, faPlus } from "@fortawesome/free-solid-svg-icons";
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 p-6">
-      <h1 className="mb-8 text-3xl font-semibold text-zinc-900">
-        Orders & Customers
-      </h1>
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <Link
-          href="/orders"
-          className="rounded-md bg-zinc-900 px-6 py-3 font-medium text-white hover:bg-zinc-800"
-        >
-          Ver listado de pedidos
-        </Link>
-        <Link
-          href="/orders/new"
-          className="rounded-md border border-zinc-300 px-6 py-3 font-medium text-zinc-900 hover:bg-zinc-100"
-        >
-          Crear pedido
-        </Link>
+    <div className="hero-bg d-flex flex-column align-items-center justify-content-center p-4">
+      <div className="hero-content text-center">
+        <h1 className="hero-title mb-3">
+          Pedidos &amp; Clientes
+        </h1>
+        <p className="hero-subtitle mb-5">
+          Gestiona Pedidos &amp; Clientes con una interfaz clara y sencilla.
+        </p>
+        <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+          <Link
+            href="/orders"
+            className="hero-btn hero-btn-primary text-decoration-none"
+          >
+            <FontAwesomeIcon icon={faList} className="me-2" />
+            Ver listado de pedidos
+          </Link>
+          <Link
+            href="/orders/new"
+            className="hero-btn hero-btn-outline text-decoration-none"
+          >
+            <FontAwesomeIcon icon={faPlus} className="me-2" />
+            Crear pedido
+          </Link>
+        </div>
       </div>
     </div>
   );
